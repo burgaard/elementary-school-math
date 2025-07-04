@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  avatar    String   // Emoji avatar
+  grade     Int      // K=0, 1st=1, 2nd=2, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Progress tracking
+  progress UserProgress[]
+  
+  @@map("users")
+}
+
+model Level {
+  id          String   @id @default(cuid())
+  grade       Int      // K=0, 1st=1, 2nd=2, etc.
+  levelNumber Int      // Level within the grade
+  name        String
+  description String?
+  problemCount Int     // 5 for K, 10 for 1st, 15 for 2nd, etc.
+  createdAt   DateTime @default(now())
+
+  // Problems in this level
+  problems Problem[]
+  // User progress on this level
+  progress UserProgress[]
+
+  @@unique([grade, levelNumber])
+  @@map("levels")
+}
+
+model Problem {
+  id       String @id @default(cuid())
+  levelId  String
+  question String
+  answer   Int
+  options  String   // JSON string of multiple choice options
+  type     String   // "addition", "subtraction", "multiplication", "division"
+  
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  
+  // User attempts on this problem
+  attempts UserAttempt[]
+  
+  @@map("problems")
+}
+
+model UserProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  levelId         String
+  score           Int      @default(0)
+  totalAttempts   Int      @default(0)
+  correctAnswers  Int      @default(0)
+  isCompleted     Boolean  @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level Level @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, levelId])
+  @@map("user_progress")
+}
+
+model UserAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  problemId   String
+  userAnswer  Int
+  isCorrect   Boolean
+  attemptedAt DateTime @default(now())
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("user_attempts")
+}
