@@ -1,3 +1,9 @@
+# First Line to Last Mile with Kim
+
+This repository contains the project vibe coded in episodes of the YouTube channel [First Line to Last Mile with Kim](https://www.youtube.com/channel/UC3-Od8EcXPvafhk7r_MGcyA).
+
+You can follow along the changes made in each episode using the [release tags]( https://github.com/burgaard/elementary-school-math/releases).
+
 # 🧮 Math Adventure App 🚀
 
 A fun and engaging math learning platform designed specifically for elementary school children (Kindergarten through 5th grade). Children can create colorful profiles with emoji avatars and progress through grade-appropriate math challenges!
