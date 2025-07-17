@@ -15,6 +15,15 @@ Parameters:
     Description: The name of the main branch
 
 Resources:
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - ffffffffffffffffffffffffffffffffffffffff
+
   GithubActionsRead:
     Type: AWS::IAM::Role
     Properties:
@@ -24,7 +33,7 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+              Federated: !Ref GithubOidc
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:*
@@ -61,7 +70,7 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+              Federated: !Ref GithubOidc
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
@@ -102,7 +111,7 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+              Federated: !Ref GithubOidc
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
