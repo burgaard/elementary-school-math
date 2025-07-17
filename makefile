@@ -11,7 +11,7 @@ endif
 
 ECR_DOMAIN := ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 
-MATH_APP_URI := $(shell aws cloudformation list-exports --query 'Exports[?Name==`Math-App:ECR-Repository-URI`].Value[]' --output text)
+MATH_APP_URI := $(shell aws --profile ${AWS_PROFILE} cloudformation list-exports --query 'Exports[?Name==`Math-App:ECR-Repository-URI`].Value[]' --output text)
 ifeq ($(MATH_APP_URI),)
 $(warning Unable to determine Math-App ECR URI. Make sure the ECR stack is deployed first.)
 endif
