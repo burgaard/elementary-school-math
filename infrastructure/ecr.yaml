@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ECR Repositories for the Math App
+
+Parameters:
+  Name:
+    Description: A name that is prefixed to resource names
+    Type: String
+
+Resources:
+  MathApp:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: math-app
+      LifecyclePolicy:
+        LifecyclePolicyText: !Sub |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire untagged images older than 1 day",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+Outputs:
+  MathAppUri:
+    Value: !GetAtt MathApp.RepositoryUri
+    Export:
+      Name: !Sub ${Name}:ECR-Repository-URI
+  MathAppArn:
+    Value: !GetAtt MathApp.Arn
+    Export:
+      Name: !Sub ${Name}:ECR-Repository-ARN

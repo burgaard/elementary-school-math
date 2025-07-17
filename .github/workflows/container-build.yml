@@ -1,0 +1,48 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [ closed ]
+    branches: [ main ]
+
+jobs:
+  build:
+    # Only run on merge to main (either direct push or merged PR)
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@4.2.1
+      with:
+        role-to-assume: Math-App-Github-Actions-Writer
+        role-session-name: math-app-session
+        aws-region: $AWS_REGION
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+      with:
+        registries: $AWS_ECR_REGISTRY
+
+    - name: Build and push container image
+      id: docker_build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          $AWS_ECR_REGISTRY/math-app:latest
+        cache-from: type=registry,ref=$AWS_ECR_REGISTRY/math-app:latest
+        cache-to: type=inline

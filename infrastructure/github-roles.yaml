@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM read and write roles for GitHub Actions
+
+Parameters:
+  Name:
+    Description: A name that is prefixed to resource names
+    Type: String
+  Repository:
+    Type: String
+    Description: The GitHub owner and repository where the OIDC workflow is defined
+    AllowedPattern: '^[\w\-]+/[\w\.\-]+$'
+  Branch:
+    Type: String
+    Default: main
+    Description: The name of the main branch
+
+Resources:
+  GithubActionsRead:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Name}-GitHub-Actions-Reader
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:*
+      Policies:
+        - PolicyName: ECR-Pull
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:BatchImportUpstreamImage
+                  - ecr:DescribeImages
+                  - ecr:DescribeRepositories
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:ListImages
+                  - ecr:ListTagsForResource
+                Resource: !Sub arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:*
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name} GitHub Actions Reader
+
+  GithubActionsWrite:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Name}-GitHub-Actions-Writer
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
+      Policies:
+        - PolicyName: ECR-Push
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:BatchImportUpstreamImage
+                  - ecr:CompleteLayerUpload
+                  - ecr:DescribeImages
+                  - ecr:DescribeRepositories
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:ListImages
+                  - ecr:ListTagsForResource
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !Sub arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:*
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name} GitHub Actions Writer
+
+  GithubActionsDeploy:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Name}-GitHub-Actions-Deployer
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
+      Policies:
+        - PolicyName: CloudFormation
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action: cloudformation:*
+                Effect: Allow
+                Resource: '*'
+        - PolicyName: ECR-Pull
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:BatchImportUpstreamImage
+                  - ecr:DescribeImages
+                  - ecr:DescribeRepositories
+                  - ecr:GetAuthorizationToken
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:ListImages
+                  - ecr:ListTagsForResource
+                Resource: '*'
+        - PolicyName: IAM
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action: iam:*
+                Effect: Allow
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub ${Name} GitHub Actions Deployer
+
+Outputs:
+  ReadRoleArn:
+    Value: !GetAtt GithubActionsRead.Arn
+    Export:
+      Name: !Sub ${Name}:GitHub-Actions-Read-Role
+  WriteRoleArn:
+    Value: !GetAtt GithubActionsWrite.Arn
+    Export:
+      Name: !Sub ${Name}:GitHub-Actions-Write-Role
+  DeployRoleArn:
+    Value: !GetAtt GithubActionsDeploy.Arn
+    Export:
+      Name: !Sub ${Name}:GitHub-Actions-Deploy-Role

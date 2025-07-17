@@ -1,0 +1,16 @@
+ifeq ($(AWS_REGION),)
+$(error AWS_REGION is not set. Please set it to a valid AWS region, e.g. us-east-1)
+endif
+
+ifeq ($(AWS_PROFILE),)
+$(error AWS_PROFILE is not set. Please set it to the name of a profile section in ~/.aws/config)
+endif
+
+ifeq ($(AWS_SSO_SESSION),)
+$(error AWS_SSO_SESSION is not set. Please set it to the name of an sso-session section in ~/.aws/config)
+endif
+
+AWS_ACCOUNT_ID := $(shell aws --profile ${AWS_PROFILE} sts get-caller-identity --query "Account" --output text || (aws sso login --sso-session ${AWS_SSO_SESSION} >/dev/null && aws --profile ${AWS_PROFILE} sts get-caller-identity --query "Account" --output text))
+ifeq ($(AWS_ACCOUNT_ID),)
+$(error Unable to determine AWS account)
+endif

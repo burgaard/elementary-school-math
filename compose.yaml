@@ -1,0 +1,13 @@
+services:
+  math-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: burgaard/math-app:latest
+    container_name: math-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./app/data:/app/data
