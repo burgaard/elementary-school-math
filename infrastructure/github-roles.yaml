@@ -35,6 +35,8 @@ Resources:
             Principal:
               Federated: !Ref GithubOidc
             Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:*
       Policies:
@@ -72,6 +74,8 @@ Resources:
             Principal:
               Federated: !Ref GithubOidc
             Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
       Policies:
@@ -113,6 +117,8 @@ Resources:
             Principal:
               Federated: !Ref GithubOidc
             Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
       Policies:
