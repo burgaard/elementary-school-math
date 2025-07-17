@@ -77,7 +77,7 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
+                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:*
       Policies:
         - PolicyName: ECR-Push
           PolicyDocument:
@@ -120,7 +120,7 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:ref:refs/heads/${Branch}/*
+                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:*
       Policies:
         - PolicyName: CloudFormation
           PolicyDocument:
